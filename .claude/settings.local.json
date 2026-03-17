@@ -37,7 +37,13 @@
       "Bash(npx tsc:*)",
       "Bash(npm run:*)",
       "Bash(npx rimraf:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(node -e \":*)",
+      "Bash(mkdir -p \"C:/Users/hamza/Desktop/Djellaba/public/images/lamaalam\")",
+      "Bash(cp \"ChatGPT Image 17 mars 2026, 20_51_56.png\" \"../../public/images/lamaalam/djellaba-front-two.png\")",
+      "Bash(cp \"ChatGPT Image 17 mars 2026, 20_52_00.png\" \"../../public/images/lamaalam/djellaba-back.png\")",
+      "Bash(cp \"ChatGPT Image 17 mars 2026, 20_52_05.png\" \"../../public/images/lamaalam/qob-ornament.png\")",
+      "Bash(cp \"ChatGPT Image 17 mars 2026, 20_52_10.png\" \"../../public/images/lamaalam/terza-strip.png\")"
     ]
   }
 }
