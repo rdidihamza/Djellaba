@@ -22,6 +22,22 @@ const slides = [
     cta: { label: 'Discover the Craft', href: '/craftsmanship' },
     ctaSecondary: { label: 'View Lookbook', href: '/lookbook' },
   },
+  {
+    video: '/videos/hero-3.mp4',
+    headline: 'Embroidered',
+    headlineAccent: 'Presence.',
+    sub: 'The Gandoura Noir Brodé — hand-applied embroidery for extraordinary occasions.',
+    cta: { label: 'Shop Gandouras', href: '/collections/gandouras' },
+    ctaSecondary: { label: 'View Limited Edition', href: '/collections/limited-edition' },
+  },
+  {
+    video: '/videos/hero-4.mp4',
+    headline: 'Refined',
+    headlineAccent: 'in Two Pieces.',
+    sub: 'The Jabador Vert Royal — a new arrival in the heritage collection.',
+    cta: { label: 'Shop New Arrivals', href: '/collections/new-arrivals' },
+    ctaSecondary: { label: 'Shop Jabador', href: '/collections/jabador' },
+  },
 ]
 
 export function HeroSection() {

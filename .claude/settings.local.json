@@ -17,7 +17,18 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(powershell.exe -Command \"Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue; Write-Host 'Done'\")"
+      "Bash(powershell.exe -Command \"Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue; Write-Host 'Done'\")",
+      "Bash(__NEW_LINE_293ea5330c29631e__ mv:*)",
+      "Bash(mv \"ChatGPT Image 17 mars 2026, 13_31_20.png\" \"Gandoura-Noir-Back-without-module.png\")",
+      "Bash(mv \"ChatGPT Image 17 mars 2026, 13_31_25.png\" \"Gandoura-Noir-left-without-module.png\")",
+      "Bash(mv \"ChatGPT Image 17 mars 2026, 13_31_29.png\" \"Gandoura-Noir-right-without-module.png\")",
+      "Bash(mv \"ChatGPT Image 17 mars 2026, 13_31_31.png\" \"Gandoura-Noir-detail-without-module.png\")",
+      "Bash(__NEW_LINE_ffe81830c9d1b019__ mv:*)",
+      "Bash(mv \"ChatGPT Image 17 mars 2026, 13_52_50.png\" \"Jabador-Vert-right-without-module.png\")",
+      "Bash(mv \"ChatGPT Image 17 mars 2026, 13_52_55.png\" \"Jabador-Vert-Back-without-module.png\")",
+      "Bash(mv \"ChatGPT Image 17 mars 2026, 13_53_00.png\" \"Jabador-Vert-left-without-module.png\")",
+      "Bash(mv \"ChatGPT Image 17 mars 2026, 13_53_03.png\" \"Jabador-Vert-detail-without-module.png\")",
+      "Bash(powershell.exe -Command \"Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue; Write-Host 'Cache cleared'\")"
     ]
   }
 }
