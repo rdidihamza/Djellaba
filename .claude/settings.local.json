@@ -35,7 +35,8 @@
       "Bash(ls /c/Users/hamza/Desktop/Djellaba/postcss.config*)",
       "Bash(powershell.exe -Command \"Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue; Write-Host 'Cleared'\")",
       "Bash(npx tsc:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npx rimraf:*)"
     ]
   }
 }
