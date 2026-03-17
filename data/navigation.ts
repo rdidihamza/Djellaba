@@ -105,6 +105,21 @@ export const megaMenu: MegaMenuSection[] = [
       },
     ],
   },
+  {
+    id: 'lamaalam',
+    label: 'Lamaalam',
+    href: '/lamaalam',
+    columns: [
+      {
+        title: 'Design Studio',
+        links: [
+          { label: 'Design Your Djellaba', href: '/lamaalam' },
+          { label: 'Custom Orders', href: '/contact' },
+          { label: 'Craftsmanship', href: '/craftsmanship' },
+        ],
+      },
+    ],
+  },
 ]
 
 export const footerLinks = {
@@ -119,6 +134,7 @@ export const footerLinks = {
     { label: 'Our Story', href: '/about' },
     { label: 'Craftsmanship', href: '/craftsmanship' },
     { label: 'Lookbook', href: '/lookbook' },
+    { label: 'Lamaalam Studio', href: '/lamaalam' },
     { label: 'Contact', href: '/contact' },
   ],
   support: [

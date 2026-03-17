@@ -26,6 +26,7 @@ const navItems = [
   { label: 'New Arrivals', href: '/collections/new-arrivals' },
   { label: 'Craftsmanship', href: '/craftsmanship' },
   { label: 'Lookbook', href: '/lookbook' },
+  { label: 'Lamaalam Studio', href: '/lamaalam' },
   { label: 'About', href: '/about' },
 ]
 
