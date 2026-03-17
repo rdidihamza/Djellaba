@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cp \"/c/Users/hamza/Desktop/Djellaba/Assets/Product 2/Djellaba-cream-with-module.png\" /c/Users/hamza/Desktop/Djellaba/public/images/products/cream/front-with-model.png)",
+      "Bash(cp \"/c/Users/hamza/Desktop/Djellaba/Assets/Product 2/Djellaba-cream-without-module.png\" /c/Users/hamza/Desktop/Djellaba/public/images/products/cream/front-without-model.png)",
+      "Bash(cp \"/c/Users/hamza/Desktop/Djellaba/Assets/Product 2/Djellaba-cream-back-with-module.png\" /c/Users/hamza/Desktop/Djellaba/public/images/products/cream/back-with-model.png)",
+      "Bash(cp \"/c/Users/hamza/Desktop/Djellaba/Assets/Product 2/Djellaba-cream-beck-without-module.png\" /c/Users/hamza/Desktop/Djellaba/public/images/products/cream/back-without-model.png)",
+      "Bash(cp \"/c/Users/hamza/Desktop/Djellaba/Assets/Product 2/Djellaba-cream-left-with-module.png\" /c/Users/hamza/Desktop/Djellaba/public/images/products/cream/left-with-model.png)",
+      "Bash(mkdir -p /c/Users/hamza/Desktop/Djellaba/app/products/[slug])",
+      "Bash(mkdir -p /c/Users/hamza/Desktop/Djellaba/app/collections/[slug])",
+      "Bash(npm install:*)",
+      "Bash(npx next:*)"
+    ]
+  }
+}

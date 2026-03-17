@@ -1,0 +1,182 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Google Fonts ──────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap');
+
+/* ─── CSS Variables ─────────────────────────────────────────────────────── */
+:root {
+  --font-cormorant: 'Cormorant Garamond', Georgia, serif;
+  --font-inter: 'Inter', system-ui, sans-serif;
+
+  --color-bg: #FAF6EE;
+  --color-bg-alt: #F2E8D0;
+  --color-brown: #2C1810;
+  --color-brown-rich: #1C0F08;
+  --color-gold: #C9A44A;
+  --color-text: #1A1209;
+  --color-text-muted: #6B5B45;
+  --color-border: #E0D4BC;
+
+  --header-height: 72px;
+}
+
+/* ─── Base Reset ────────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-inter);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ─── Typography ────────────────────────────────────────────────────────── */
+.font-display {
+  font-family: var(--font-cormorant);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-cormorant);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+/* ─── Selection ─────────────────────────────────────────────────────────── */
+::selection {
+  background-color: rgba(201, 164, 74, 0.25);
+  color: #1C0F08;
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F2E8D0;
+}
+::-webkit-scrollbar-thumb {
+  background: #C9A44A;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2C1810;
+}
+
+/* ─── Focus Styles ──────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid #C9A44A;
+  outline-offset: 2px;
+}
+
+/* ─── Utility Classes ───────────────────────────────────────────────────── */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .border-gold {
+    border-color: #C9A44A;
+  }
+  .bg-cream {
+    background-color: #FAF6EE;
+  }
+  .bg-sand {
+    background-color: #F2E8D0;
+  }
+}
+
+/* ─── Header Height Offset ──────────────────────────────────────────────── */
+.pt-header {
+  padding-top: var(--header-height);
+}
+
+/* ─── Luxury Link Underline ─────────────────────────────────────────────── */
+.link-luxury {
+  position: relative;
+  text-decoration: none;
+}
+.link-luxury::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 0;
+  height: 1px;
+  background-color: currentColor;
+  transition: width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.link-luxury:hover::after {
+  width: 100%;
+}
+
+/* ─── Product Image Zoom ────────────────────────────────────────────────── */
+.product-gallery-image {
+  transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.product-gallery-image:hover {
+  transform: scale(1.03);
+}
+
+/* ─── Angle Switcher Active ─────────────────────────────────────────────── */
+.angle-btn-active {
+  border-color: #C9A44A !important;
+  box-shadow: 0 0 0 1px #C9A44A;
+}
+
+/* ─── Cart Drawer Overlay ───────────────────────────────────────────────── */
+.cart-overlay {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ─── Shimmer Loading ───────────────────────────────────────────────────── */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    #F2E8D0 25%,
+    #FAF6EE 50%,
+    #F2E8D0 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ─── Grain Overlay ─────────────────────────────────────────────────────── */
+.grain-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ─── Mega Menu ─────────────────────────────────────────────────────────── */
+.mega-menu-panel {
+  transform-origin: top center;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* ─── Hide scrollbar but allow scroll ──────────────────────────────────── */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
