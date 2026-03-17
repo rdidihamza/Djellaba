@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Cormorant_Garamond, Inter } from 'next/font/google'
 import './globals.css'
-import { Header } from '@/components/layout/Header'
+import { SiteShell } from '@/components/layout/SiteShell'
 import { Footer } from '@/components/layout/Footer'
 import { CartDrawer } from '@/components/ui/CartDrawer'
 
@@ -55,9 +55,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${cormorant.variable} ${inter.variable}`}>
       <body className="bg-cream antialiased">
-        <Header />
         <CartDrawer />
-        <main className="pt-[72px]">{children}</main>
+        <SiteShell>
+          <main>{children}</main>
+        </SiteShell>
         <Footer />
       </body>
     </html>

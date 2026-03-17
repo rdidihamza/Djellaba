@@ -10,7 +10,7 @@ import { MegaMenu } from './MegaMenu'
 import { MobileNav } from './MobileNav'
 import { megaMenu } from '@/data/navigation'
 
-export function Header() {
+export function Header({ barOffset = 0 }: { barOffset?: number }) {
   const [scrolled, setScrolled] = useState(false)
   const [activeMega, setActiveMega] = useState<string | null>(null)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -42,12 +42,12 @@ export function Header() {
     <>
       <header
         className={cn(
-          'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+          'fixed left-0 right-0 z-40 transition-all duration-300',
           scrolled
             ? 'bg-cream/95 backdrop-blur-md shadow-luxury border-b border-gold-100'
             : 'bg-cream/90 backdrop-blur-sm'
         )}
-        style={{ height: 72 }}
+        style={{ height: 72, top: barOffset }}
       >
         <div className="max-w-8xl mx-auto px-6 lg:px-10 h-full flex items-center justify-between gap-8">
           {/* Logo */}
@@ -166,7 +166,8 @@ export function Header() {
         <div
           onMouseEnter={() => handleMegaEnter(activeMega)}
           onMouseLeave={handleMegaLeave}
-          className="fixed top-[72px] left-0 right-0 z-40"
+          style={{ position: 'fixed', top: barOffset + 72, left: 0, right: 0, zIndex: 39 }}
+          className=""
         >
           <MegaMenu section={megaMenu.find((m) => m.id === activeMega)!} />
         </div>

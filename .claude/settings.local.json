@@ -28,7 +28,12 @@
       "Bash(mv \"ChatGPT Image 17 mars 2026, 13_52_55.png\" \"Jabador-Vert-Back-without-module.png\")",
       "Bash(mv \"ChatGPT Image 17 mars 2026, 13_53_00.png\" \"Jabador-Vert-left-without-module.png\")",
       "Bash(mv \"ChatGPT Image 17 mars 2026, 13_53_03.png\" \"Jabador-Vert-detail-without-module.png\")",
-      "Bash(powershell.exe -Command \"Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue; Write-Host 'Cache cleared'\")"
+      "Bash(powershell.exe -Command \"Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue; Write-Host 'Cache cleared'\")",
+      "Bash(node -e \"const tw = require\\(''''tailwindcss''''\\); console.log\\(''''tailwind ok''''\\)\")",
+      "Bash(node -e \"require\\(''''./tailwind.config.ts''''\\)\")",
+      "Bash(ls /c/Users/hamza/Desktop/Djellaba/tailwind.config*)",
+      "Bash(ls /c/Users/hamza/Desktop/Djellaba/postcss.config*)",
+      "Bash(powershell.exe -Command \"Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue; Write-Host 'Cleared'\")"
     ]
   }
 }
