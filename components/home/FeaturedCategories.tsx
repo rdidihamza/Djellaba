@@ -6,31 +6,31 @@ const categories = [
   {
     name: 'Djellabas',
     href: '/collections/djellabas',
-    image: '/images/products/marron/front-with-model.png',
+    image: '/images/categories/djellabas.png',
     description: 'Traditional Moroccan elegance',
   },
   {
     name: 'Kaftans',
     href: '/collections/kaftans',
-    image: '/images/products/cream/front-with-model.png',
+    image: '/images/categories/kaftans.png',
     description: 'Refined feminine silhouettes',
   },
   {
     name: 'Gandouras',
     href: '/collections/gandouras',
-    image: '/images/products/marron/left-with-model.png',
+    image: '/images/categories/gandouras.png',
     description: 'Heritage menswear, reimagined',
   },
   {
     name: 'Jabador',
     href: '/collections/jabador',
-    image: '/images/products/cream/back-with-model.png',
+    image: '/images/categories/jabador.png',
     description: 'Two-piece artisan sets',
   },
   {
     name: 'Accessories',
     href: '/collections/accessories',
-    image: '/images/products/marron/right-with-model.png',
+    image: '/images/categories/accessories.png',
     description: 'Finishing touches',
   },
 ]
