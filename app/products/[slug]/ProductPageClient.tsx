@@ -8,6 +8,7 @@ import { ProductAngleSwitcher } from '@/components/product/ProductAngleSwitcher'
 import { Product3DViewer } from '@/components/product/Product3DViewer'
 import { ProductInfoPanel } from '@/components/product/ProductInfoPanel'
 import { ProductCard } from '@/components/product/ProductCard'
+import { CustomerReviews } from '@/components/product/CustomerReviews'
 import { products } from '@/data/products'
 import type { Product } from '@/types'
 
@@ -188,6 +189,12 @@ export function ProductPageClient({ product, initialColorSlug }: ProductPageClie
           <h2 className="font-display text-2xl text-brown-900 mb-4">About This Piece</h2>
           <p className="text-brown-600 leading-relaxed text-base">{product.fullDescription}</p>
         </div>
+
+        {/* Customer Reviews */}
+        <CustomerReviews
+          reviews={product.reviews}
+          productName={product.name}
+        />
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (

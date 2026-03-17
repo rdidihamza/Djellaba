@@ -1,3 +1,19 @@
+// ─── Review Types ───────────────────────────────────────────────────────────
+
+export interface Review {
+  id: string
+  author: string
+  location?: string
+  date: string          // ISO date string
+  rating: number        // 1–5
+  title: string
+  body: string
+  verified: boolean
+  colorPurchased?: string
+  sizePurchased?: string
+  helpful?: number
+}
+
 // ─── Product Types ─────────────────────────────────────────────────────────
 
 export type ProductAngle = 'front' | 'back' | 'left' | 'right' | 'detail'
@@ -87,6 +103,7 @@ export interface Product {
   isNew?: boolean
   isBestSeller?: boolean
   isLimitedEdition?: boolean
+  reviews?: Review[]
 }
 
 // ─── Cart Types ─────────────────────────────────────────────────────────────
