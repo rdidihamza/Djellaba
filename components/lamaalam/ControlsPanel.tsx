@@ -1,13 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef, useContext } from 'react'
 import {
   Trash2, Copy, ChevronUp, ChevronDown, ChevronsUp, ChevronsDown,
-  RotateCcw, FlipHorizontal, FlipVertical, Lock, Unlock, ShoppingBag, Download,
+  RotateCcw, FlipHorizontal, FlipVertical, Lock, Unlock, ShoppingBag,
+  Download, CheckCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLamaalamStore } from '@/lib/lamaalam-store'
 import { decorationAssets } from '@/data/lamaalam-assets'
+import { StageContext } from './Studio'
 
 // ─────────────────────────────────────────────────────────────
 // Shared small button
@@ -50,7 +52,7 @@ function CtrlBtn({
 }
 
 // ─────────────────────────────────────────────────────────────
-// Slider row
+// Debounced slider row
 // ─────────────────────────────────────────────────────────────
 
 function SliderRow({
@@ -70,6 +72,16 @@ function SliderRow({
   onChange: (v: number) => void
   format?: (v: number) => string
 }) {
+  const rafRef = useRef<number | null>(null)
+
+  const handleChange = (v: number) => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(() => {
+      onChange(v)
+      rafRef.current = null
+    })
+  }
+
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
@@ -84,7 +96,7 @@ function SliderRow({
         max={max}
         step={step}
         value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
+        onChange={(e) => handleChange(Number(e.target.value))}
         className="w-full h-1.5 rounded-full appearance-none bg-gold-100 accent-gold-500 cursor-pointer"
       />
     </div>
@@ -100,6 +112,37 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     <div className="px-5 py-4 border-b border-gold-100">
       <p className="text-[10px] tracking-[0.18em] uppercase text-gold-600 mb-3">{title}</p>
       {children}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
+// Inline toast banner
+// ─────────────────────────────────────────────────────────────
+
+function ToastBanner() {
+  const { toast, dismissToast } = useLamaalamStore()
+
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => dismissToast(), 2400)
+    return () => clearTimeout(t)
+  }, [toast, dismissToast])
+
+  if (!toast) return null
+
+  return (
+    <div
+      className={cn(
+        'mx-4 mb-3 flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-medium',
+        'animate-in fade-in slide-in-from-top-1 duration-200',
+        toast.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
+        toast.type === 'error'   ? 'bg-red-50 text-red-700 border border-red-200' :
+                                   'bg-gold-50 text-brown-700 border border-gold-200'
+      )}
+    >
+      <CheckCircle size={12} className="shrink-0" />
+      <span className="flex-1">{toast.message}</span>
     </div>
   )
 }
@@ -125,9 +168,13 @@ export function ControlsPanel() {
     placedElements,
     showZones,
     toggleZones,
+    designNotes,
+    setDesignNotes,
+    showToast,
+    toast,
   } = useLamaalamStore()
 
-  const [saveLabel, setSaveLabel] = useState('Save JSON')
+  const stageRef = useContext(StageContext)
   const [requestSent, setRequestSent] = useState(false)
 
   const el = getSelectedElement()
@@ -147,19 +194,18 @@ export function ControlsPanel() {
     a.download = `lamaalam-design-${Date.now()}.json`
     a.click()
     URL.revokeObjectURL(url)
-    setSaveLabel('Saved ✓')
-    setTimeout(() => setSaveLabel('Save JSON'), 2000)
+    showToast('Design JSON saved', 'success')
   }
 
   const handleImageExport = () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const stage = (window as any).__lamaalamStage
+    const stage = stageRef?.current
     if (!stage) return
     const dataURL = stage.toDataURL({ pixelRatio: 2 })
     const a = document.createElement('a')
     a.href = dataURL
     a.download = `lamaalam-design-${Date.now()}.png`
     a.click()
+    showToast('PNG exported at 2×', 'success')
   }
 
   return (
@@ -173,7 +219,19 @@ export function ControlsPanel() {
         {el && asset?.nameAr && (
           <p className="text-[11px] text-brown-400 mt-0.5" dir="rtl">{asset.nameAr}</p>
         )}
+        {el?.locked && (
+          <p className="text-[10px] text-amber-600 mt-1 flex items-center gap-1">
+            <Lock size={9} /> Position locked
+          </p>
+        )}
       </div>
+
+      {/* Toast banner */}
+      {toast && (
+        <div className="pt-3">
+          <ToastBanner />
+        </div>
+      )}
 
       {/* ── Selected element controls ────────────────────── */}
       {el ? (
@@ -206,7 +264,11 @@ export function ControlsPanel() {
                     type="number"
                     value={Math.round(el.width)}
                     min={10}
-                    onChange={(e) => update({ width: Number(e.target.value) })}
+                    max={2000}
+                    onChange={(e) => {
+                      const v = Math.max(10, Math.min(2000, Number(e.target.value)))
+                      update({ width: v })
+                    }}
                     className="w-full px-2.5 py-1.5 text-[12px] bg-cream border border-gold-200 rounded-lg text-brown-700 focus:outline-none focus:border-gold-400"
                   />
                 </div>
@@ -216,7 +278,11 @@ export function ControlsPanel() {
                     type="number"
                     value={Math.round(el.height)}
                     min={10}
-                    onChange={(e) => update({ height: Number(e.target.value) })}
+                    max={2000}
+                    onChange={(e) => {
+                      const v = Math.max(10, Math.min(2000, Number(e.target.value)))
+                      update({ height: v })
+                    }}
                     className="w-full px-2.5 py-1.5 text-[12px] bg-cream border border-gold-200 rounded-lg text-brown-700 focus:outline-none focus:border-gold-400"
                   />
                 </div>
@@ -273,17 +339,17 @@ export function ControlsPanel() {
           {/* Element actions */}
           <Section title="Actions">
             <div className="grid grid-cols-3 gap-1.5">
-              <CtrlBtn onClick={() => duplicateElement(el.id)} title="Duplicate">
+              <CtrlBtn onClick={() => duplicateElement(el.id)} title="Duplicate (Ctrl+D)">
                 <Copy size={14} />
               </CtrlBtn>
               <CtrlBtn
                 onClick={() => update({ locked: !el.locked })}
-                title={el.locked ? 'Unlock' : 'Lock position'}
+                title={el.locked ? 'Unlock position' : 'Lock position'}
               >
                 {el.locked ? <Lock size={14} /> : <Unlock size={14} />}
               </CtrlBtn>
               <CtrlBtn
-                onClick={() => { update({ rotation: 0, scaleX: 1, scaleY: 1 }); }}
+                onClick={() => update({ rotation: 0, scaleX: 1, scaleY: 1, flipX: false, flipY: false })}
                 title="Reset transform"
               >
                 <RotateCcw size={14} />
@@ -312,8 +378,22 @@ export function ControlsPanel() {
         </div>
       )}
 
+      {/* ── Design notes textarea ─────────────────────────── */}
+      <div className="px-5 py-4 border-t border-gold-100">
+        <p className="text-[10px] tracking-[0.12em] uppercase text-gold-600 mb-2">Design Notes</p>
+        <textarea
+          value={designNotes}
+          onChange={(e) => setDesignNotes(e.target.value)}
+          placeholder="Special instructions for the atelier…"
+          rows={3}
+          className="w-full px-3 py-2 text-[11px] bg-sand/40 border border-gold-200 rounded-lg
+            text-brown-700 placeholder:text-brown-300 resize-none leading-relaxed
+            focus:outline-none focus:border-gold-400 transition-colors"
+        />
+      </div>
+
       {/* ── Global studio actions ────────────────────────── */}
-      <div className="px-5 py-4 border-t border-gold-100 space-y-2">
+      <div className="px-5 pb-4 space-y-2">
         {/* Zone toggle */}
         <button
           onClick={toggleZones}
@@ -332,7 +412,7 @@ export function ControlsPanel() {
           onClick={handleImageExport}
           className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-gold-300 bg-cream text-brown-700 hover:bg-sand hover:border-gold-500 text-[11px] font-medium tracking-[0.06em] transition-all"
         >
-          <Download size={13} /> Export Preview
+          <Download size={13} /> Export Preview PNG
         </button>
 
         {/* Save JSON */}
@@ -340,12 +420,15 @@ export function ControlsPanel() {
           onClick={handleExport}
           className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-gold-300 bg-cream text-brown-700 hover:bg-sand hover:border-gold-500 text-[11px] font-medium tracking-[0.06em] transition-all"
         >
-          <Download size={13} /> {saveLabel}
+          <Download size={13} /> Save Design JSON
         </button>
 
         {/* Custom order CTA */}
         <button
-          onClick={() => setRequestSent(true)}
+          onClick={() => {
+            setRequestSent(true)
+            showToast('Your custom order request has been sent!', 'success')
+          }}
           disabled={placedElements.length === 0 || requestSent}
           className={cn(
             'w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[12px] font-medium tracking-[0.08em] transition-all duration-200',
@@ -363,4 +446,3 @@ export function ControlsPanel() {
     </aside>
   )
 }
-

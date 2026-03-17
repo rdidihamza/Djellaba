@@ -1,15 +1,16 @@
 'use client'
 
-import { useRef, useEffect, useCallback, useState } from 'react'
+import { useRef, useEffect, useCallback, useState, memo, useContext } from 'react'
 import { Stage, Layer, Image as KImage, Transformer, Rect, Text } from 'react-konva'
 import useImage from 'use-image'
 import type Konva from 'konva'
 import { useLamaalamStore } from '@/lib/lamaalam-store'
 import { decorationAssets } from '@/data/lamaalam-assets'
 import type { PlacedDecoration } from '@/types/lamaalam'
+import { StageContext } from './Studio'
 
 // ─────────────────────────────────────────────────────────────
-// Single placed decoration element
+// Single placed decoration element (memoized)
 // ─────────────────────────────────────────────────────────────
 
 interface DecoElementProps {
@@ -18,16 +19,23 @@ interface DecoElementProps {
   onSelect: () => void
   onDragEnd: (x: number, y: number) => void
   onTransformEnd: (attrs: Partial<PlacedDecoration>) => void
+  canvasW: number
+  canvasH: number
 }
 
-function DecoElement({ el, isSelected, onSelect, onDragEnd, onTransformEnd }: DecoElementProps) {
+const DecoElement = memo(function DecoElement({
+  el,
+  onSelect,
+  onDragEnd,
+  onTransformEnd,
+  canvasW,
+  canvasH,
+}: DecoElementProps) {
   const asset = decorationAssets.find((a) => a.id === el.assetId)
   const [img] = useImage(asset?.image ?? '', 'anonymous')
-  const nodeRef = useRef<Konva.Image>(null)
 
   return (
     <KImage
-      ref={nodeRef}
       id={el.id}
       image={img}
       x={el.x}
@@ -37,31 +45,40 @@ function DecoElement({ el, isSelected, onSelect, onDragEnd, onTransformEnd }: De
       rotation={el.rotation}
       scaleX={el.scaleX * (el.flipX ? -1 : 1)}
       scaleY={el.scaleY * (el.flipY ? -1 : 1)}
+      offsetX={el.flipX ? el.width : 0}
+      offsetY={el.flipY ? el.height : 0}
       opacity={el.opacity}
       draggable={!el.locked}
       onClick={onSelect}
       onTap={onSelect}
       onDragEnd={(e) => {
-        onDragEnd(e.target.x(), e.target.y())
+        // Clamp position so element stays within canvas
+        const node = e.target
+        const clampedX = Math.max(0, Math.min(canvasW - el.width, node.x()))
+        const clampedY = Math.max(0, Math.min(canvasH - el.height, node.y()))
+        node.x(clampedX)
+        node.y(clampedY)
+        onDragEnd(clampedX, clampedY)
       }}
       onTransformEnd={(e) => {
         const node = e.target as Konva.Image
+        const newW = Math.max(10, node.width() * node.scaleX())
+        const newH = Math.max(10, node.height() * node.scaleY())
         onTransformEnd({
           x: node.x(),
           y: node.y(),
-          width: Math.max(10, node.width() * node.scaleX()),
-          height: Math.max(10, node.height() * node.scaleY()),
+          width: newW,
+          height: newH,
           scaleX: 1,
           scaleY: 1,
           rotation: node.rotation(),
         })
-        // Reset scale on node after baking into width/height
         node.scaleX(1)
         node.scaleY(1)
       }}
     />
   )
-}
+})
 
 // ─────────────────────────────────────────────────────────────
 // Zone overlay rectangles
@@ -85,10 +102,11 @@ function ZoneOverlays({
           y={z.y * canvasHeight}
           width={z.width * canvasWidth}
           height={z.height * canvasHeight}
-          fill="rgba(201,164,74,0.08)"
-          stroke="rgba(201,164,74,0.35)"
+          fill="rgba(201,164,74,0.07)"
+          stroke="rgba(201,164,74,0.32)"
           strokeWidth={1}
           dash={[4, 4]}
+          listening={false}
         />
       ))}
       {zones.map((z) => (
@@ -100,9 +118,39 @@ function ZoneOverlays({
           fontSize={9}
           fill="rgba(160,120,48,0.7)"
           fontFamily="Inter, sans-serif"
+          listening={false}
         />
       ))}
     </>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
+// Animated empty state ornament
+// ─────────────────────────────────────────────────────────────
+
+function EmptyStateOverlay() {
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+      <div className="flex flex-col items-center gap-4">
+        {/* Pulsing ornament */}
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 rounded-full bg-gold-200/30 animate-ping" />
+          <div className="absolute inset-2 rounded-full bg-gold-100/40 animate-pulse" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-2xl text-gold-500 opacity-60">✦</span>
+          </div>
+        </div>
+        <div className="text-center">
+          <p className="text-[11px] tracking-[0.18em] uppercase text-brown-400 opacity-70">
+            Click or drag a motif
+          </p>
+          <p className="text-[11px] tracking-[0.18em] uppercase text-brown-400 opacity-70">
+            from the library to begin
+          </p>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -126,7 +174,10 @@ export default function StudioCanvas({ containerWidth }: StudioCanvasProps) {
     sortedElements,
   } = useLamaalamStore()
 
-  const stageRef = useRef<Konva.Stage>(null)
+  const stageRef = useContext(StageContext)
+  const internalStageRef = useRef<Konva.Stage>(null)
+  const activeStageRef = stageRef ?? internalStageRef
+
   const transformerRef = useRef<Konva.Transformer>(null)
   const [baseImg] = useImage(selectedBase.image, 'anonymous')
   const [isDraggingOver, setIsDraggingOver] = useState(false)
@@ -139,12 +190,15 @@ export default function StudioCanvas({ containerWidth }: StudioCanvasProps) {
   const stageH = nativeH * scale
 
   // ── Sync transformer to selected node ──────────────────
+  const selectedEl = placedElements.find((e) => e.id === selectedElementId)
+  const isLocked = selectedEl?.locked ?? false
+
   useEffect(() => {
     const tr = transformerRef.current
-    const stage = stageRef.current
+    const stage = activeStageRef.current
     if (!tr || !stage) return
 
-    if (selectedElementId) {
+    if (selectedElementId && !isLocked) {
       const node = stage.findOne(`#${selectedElementId}`)
       if (node) {
         tr.nodes([node as Konva.Node])
@@ -155,7 +209,7 @@ export default function StudioCanvas({ containerWidth }: StudioCanvasProps) {
       tr.nodes([])
     }
     tr.getLayer()?.batchDraw()
-  }, [selectedElementId, placedElements])
+  }, [selectedElementId, placedElements, isLocked, activeStageRef])
 
   // ── Deselect on stage background click ─────────────────
   const handleStageClick = useCallback(
@@ -167,7 +221,7 @@ export default function StudioCanvas({ containerWidth }: StudioCanvasProps) {
     [selectElement]
   )
 
-  // ── Drop from asset panel ───────────────────────────────
+  // ── Drop from asset panel (bounds-aware) ────────────────
   const handleDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault()
@@ -175,23 +229,21 @@ export default function StudioCanvas({ containerWidth }: StudioCanvasProps) {
 
       const assetId = e.dataTransfer.getData('assetId')
       const asset = decorationAssets.find((a) => a.id === assetId)
-      if (!asset || !stageRef.current) return
+      if (!asset || !activeStageRef.current) return
 
-      const stage = stageRef.current
+      const stage = activeStageRef.current
       const stageBox = stage.container().getBoundingClientRect()
-      const x = (e.clientX - stageBox.left) / scale
-      const y = (e.clientY - stageBox.top) / scale
+      const rawX = (e.clientX - stageBox.left) / scale
+      const rawY = (e.clientY - stageBox.top) / scale
 
-      useLamaalamStore.getState().addElement(asset, x - asset.defaultWidth / 2, y - asset.defaultHeight / 2)
+      // Clamp so element stays fully within canvas
+      const x = Math.max(0, Math.min(nativeW - asset.defaultWidth, rawX - asset.defaultWidth / 2))
+      const y = Math.max(0, Math.min(nativeH - asset.defaultHeight, rawY - asset.defaultHeight / 2))
+
+      useLamaalamStore.getState().addElement(asset, x, y)
     },
-    [scale]
+    [scale, nativeW, nativeH, activeStageRef]
   )
-
-  // ── Export canvas as PNG ────────────────────────────────
-  // Exposed via store action — stageRef accessible externally
-  useEffect(() => {
-    ;(window as unknown as Record<string, unknown>).__lamaalamStage = stageRef.current
-  }, [])
 
   const sorted = sortedElements()
 
@@ -209,7 +261,7 @@ export default function StudioCanvas({ containerWidth }: StudioCanvasProps) {
       )}
 
       <Stage
-        ref={stageRef}
+        ref={activeStageRef as React.RefObject<Konva.Stage>}
         width={stageW}
         height={stageH}
         scaleX={scale}
@@ -219,18 +271,12 @@ export default function StudioCanvas({ containerWidth }: StudioCanvasProps) {
         style={{ display: 'block' }}
       >
         {/* ── Layer 0: Background ──────────────────────── */}
-        <Layer>
-          <Rect
-            x={0}
-            y={0}
-            width={nativeW}
-            height={nativeH}
-            fill="#F7F2EA"
-          />
+        <Layer listening={false}>
+          <Rect x={0} y={0} width={nativeW} height={nativeH} fill="#F4EDE0" />
         </Layer>
 
         {/* ── Layer 1: Base garment ────────────────────── */}
-        <Layer>
+        <Layer listening={false}>
           <KImage
             image={baseImg}
             x={0}
@@ -260,6 +306,8 @@ export default function StudioCanvas({ containerWidth }: StudioCanvasProps) {
               el={el}
               isSelected={el.id === selectedElementId}
               onSelect={() => selectElement(el.id)}
+              canvasW={nativeW}
+              canvasH={nativeH}
               onDragEnd={(x, y) => {
                 updateElement(el.id, { x, y })
               }}
@@ -284,7 +332,6 @@ export default function StudioCanvas({ containerWidth }: StudioCanvasProps) {
               'top-center', 'bottom-center',
             ]}
             boundBoxFunc={(oldBox, newBox) => {
-              // Enforce minimum size
               if (newBox.width < 10 || newBox.height < 10) return oldBox
               return newBox
             }}
@@ -301,14 +348,8 @@ export default function StudioCanvas({ containerWidth }: StudioCanvasProps) {
         </Layer>
       </Stage>
 
-      {/* Empty state hint */}
-      {placedElements.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <p className="text-[11px] tracking-[0.18em] uppercase text-brown-400 text-center px-4 opacity-60">
-            Click or drag a motif<br />from the panel to begin
-          </p>
-        </div>
-      )}
+      {/* Animated empty state */}
+      {placedElements.length === 0 && <EmptyStateOverlay />}
     </div>
   )
 }

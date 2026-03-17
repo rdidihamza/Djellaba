@@ -52,6 +52,15 @@ export interface DjellabBase {
   zones: PlacementZone[]
 }
 
+// Color variant for future multi-color base support
+export interface ColorVariant {
+  id: string
+  label: string
+  labelAr?: string
+  hex: string
+  image: string           // data URI or path to color-specific SVG
+}
+
 // A decorative asset available in the library
 export interface DecorationAsset {
   id: string
@@ -69,7 +78,7 @@ export interface DecorationAsset {
 
 // An instance of a decoration placed on the canvas
 export interface PlacedDecoration {
-  id: string              // unique instance id (uuid)
+  id: string              // unique instance id
   assetId: string
   x: number               // canvas pixels from left
   y: number               // canvas pixels from top
@@ -85,6 +94,12 @@ export interface PlacedDecoration {
   flipX?: boolean
   flipY?: boolean
   metadata?: Record<string, unknown>
+}
+
+// Wraps a snapshot for undo/redo with optional label
+export interface HistoryEntry {
+  elements: PlacedDecoration[]
+  label?: string
 }
 
 // A saved preset design
@@ -106,6 +121,7 @@ export interface StudioState {
   future: PlacedDecoration[][]   // redo stack
   savedPresets: DesignPreset[]
   showZones: boolean
+  designNotes: string
 }
 
 // Serialisable design export (sent to backend / workshop)
@@ -115,6 +131,7 @@ export interface DesignExport {
   elements: PlacedDecoration[]
   exportedAt: string
   totalElements: number
+  notes?: string
 }
 
 // Category metadata for the UI panel
@@ -123,4 +140,11 @@ export interface CategoryMeta {
   label: string
   labelAr?: string
   icon: string
+}
+
+// In-app notification
+export interface ToastMessage {
+  id: string
+  message: string
+  type: 'success' | 'info' | 'error'
 }

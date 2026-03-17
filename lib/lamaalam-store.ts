@@ -6,6 +6,7 @@ import type {
   PlacedDecoration,
   DesignPreset,
   DesignExport,
+  ToastMessage,
 } from '@/types/lamaalam'
 import { djellabBases, decorationAssets } from '@/data/lamaalam-assets'
 
@@ -17,7 +18,19 @@ function uid() {
   return `el-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
 
+function deepClone<T>(value: T): T {
+  if (typeof structuredClone !== 'undefined') return structuredClone(value)
+  return JSON.parse(JSON.stringify(value))
+}
+
 const MAX_HISTORY = 50
+const STORAGE_KEY = 'lamaalam_design_v2'
+
+interface PersistedState {
+  placedElements: PlacedDecoration[]
+  baseId: string
+  designNotes: string
+}
 
 // ─────────────────────────────────────────────────────────────
 // Store interface
@@ -33,9 +46,14 @@ interface LamaalamStore {
   savedPresets: DesignPreset[]
   showZones: boolean
   isDirty: boolean
+  designNotes: string
+  toast: ToastMessage | null
 
   // ── History helpers ───────────────────────────────
   _snapshot: () => void
+
+  // ── Persistence ───────────────────────────────────
+  loadFromStorage: () => void
 
   // ── Element actions ───────────────────────────────
   addElement: (asset: DecorationAsset, x?: number, y?: number) => void
@@ -64,6 +82,9 @@ interface LamaalamStore {
 
   // ── UI toggles ────────────────────────────────────
   toggleZones: () => void
+  setDesignNotes: (notes: string) => void
+  showToast: (message: string, type?: ToastMessage['type']) => void
+  dismissToast: () => void
 
   // ── Getters ───────────────────────────────────────
   getSelectedElement: () => PlacedDecoration | null
@@ -85,12 +106,32 @@ export const useLamaalamStore = create<LamaalamStore>()(
     savedPresets: [],
     showZones: false,
     isDirty: false,
+    designNotes: '',
+    toast: null,
 
     // ── Snapshot for undo ──────────────────────────────────
     _snapshot() {
       const { placedElements, past } = get()
-      const next = [JSON.parse(JSON.stringify(placedElements)), ...past].slice(0, MAX_HISTORY)
+      const next = [deepClone(placedElements), ...past].slice(0, MAX_HISTORY)
       set({ past: next, future: [], isDirty: true })
+    },
+
+    // ── Load from localStorage ─────────────────────────────
+    loadFromStorage() {
+      if (typeof window === 'undefined') return
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY)
+        if (!raw) return
+        const data: PersistedState = JSON.parse(raw)
+        const base = djellabBases.find((b) => b.id === data.baseId) ?? djellabBases[0]
+        set({
+          placedElements: data.placedElements ?? [],
+          selectedBase: base,
+          designNotes: data.designNotes ?? '',
+        })
+      } catch {
+        // Corrupted storage — ignore silently
+      }
     },
 
     // ── Add element ────────────────────────────────────────
@@ -98,7 +139,7 @@ export const useLamaalamStore = create<LamaalamStore>()(
       get()._snapshot()
       const { selectedBase } = get()
       const cx = x ?? (selectedBase.canvasWidth - asset.defaultWidth) / 2
-      const cy = y ?? (selectedBase.canvasHeight - asset.defaultHeight) / 3
+      const cy = y ?? selectedBase.canvasHeight / 3 - asset.defaultHeight / 2
       const maxZ = get().placedElements.reduce((m, e) => Math.max(m, e.zIndex), 0)
 
       const el: PlacedDecoration = {
@@ -123,7 +164,6 @@ export const useLamaalamStore = create<LamaalamStore>()(
 
     // ── Update element ─────────────────────────────────────
     updateElement(id, updates) {
-      // Only snapshot when we start a drag/transform, not on every pixel move
       set((s) => ({
         placedElements: s.placedElements.map((e) =>
           e.id === id ? { ...e, ...updates } : e
@@ -153,7 +193,7 @@ export const useLamaalamStore = create<LamaalamStore>()(
       if (!original) return
       const maxZ = get().placedElements.reduce((m, e) => Math.max(m, e.zIndex), 0)
       const copy: PlacedDecoration = {
-        ...JSON.parse(JSON.stringify(original)),
+        ...deepClone(original),
         id: uid(),
         x: original.x + 20,
         y: original.y + 20,
@@ -227,7 +267,7 @@ export const useLamaalamStore = create<LamaalamStore>()(
       const [prev, ...rest] = past
       set({
         past: rest,
-        future: [JSON.parse(JSON.stringify(placedElements)), ...future].slice(0, MAX_HISTORY),
+        future: [deepClone(placedElements), ...future].slice(0, MAX_HISTORY),
         placedElements: prev,
         selectedElementId: null,
       })
@@ -239,7 +279,7 @@ export const useLamaalamStore = create<LamaalamStore>()(
       const [next, ...rest] = future
       set({
         future: rest,
-        past: [JSON.parse(JSON.stringify(placedElements)), ...past].slice(0, MAX_HISTORY),
+        past: [deepClone(placedElements), ...past].slice(0, MAX_HISTORY),
         placedElements: next,
         selectedElementId: null,
       })
@@ -261,7 +301,7 @@ export const useLamaalamStore = create<LamaalamStore>()(
         id: uid(),
         name,
         baseId: selectedBase.id,
-        elements: JSON.parse(JSON.stringify(placedElements)),
+        elements: deepClone(placedElements),
         createdAt: new Date().toISOString(),
       }
       set((s) => ({ savedPresets: [...s.savedPresets, preset] }))
@@ -271,26 +311,40 @@ export const useLamaalamStore = create<LamaalamStore>()(
     loadPreset(preset) {
       get()._snapshot()
       set({
-        placedElements: JSON.parse(JSON.stringify(preset.elements)),
+        placedElements: deepClone(preset.elements),
         selectedElementId: null,
       })
     },
 
     // ── Export ─────────────────────────────────────────────
     exportDesignJSON(): DesignExport {
-      const { placedElements, selectedBase } = get()
+      const { placedElements, selectedBase, designNotes } = get()
       return {
         version: '1.0',
         baseId: selectedBase.id,
-        elements: JSON.parse(JSON.stringify(placedElements)),
+        elements: deepClone(placedElements),
         exportedAt: new Date().toISOString(),
         totalElements: placedElements.length,
+        notes: designNotes || undefined,
       }
     },
 
-    // ── Zones toggle ───────────────────────────────────────
+    // ── UI toggles ──────────────────────────────────────────
     toggleZones() {
       set((s) => ({ showZones: !s.showZones }))
+    },
+
+    setDesignNotes(notes) {
+      set({ designNotes: notes })
+    },
+
+    showToast(message, type = 'success') {
+      const t: ToastMessage = { id: uid(), message, type }
+      set({ toast: t })
+    },
+
+    dismissToast() {
+      set({ toast: null })
     },
 
     // ── Getters ────────────────────────────────────────────
@@ -309,3 +363,44 @@ export const useLamaalamStore = create<LamaalamStore>()(
     },
   }))
 )
+
+// ─────────────────────────────────────────────────────────────
+// Persist to localStorage on every placedElements change
+// ─────────────────────────────────────────────────────────────
+
+if (typeof window !== 'undefined') {
+  useLamaalamStore.subscribe(
+    (state) => state.placedElements,
+    (placedElements) => {
+      const { selectedBase, designNotes } = useLamaalamStore.getState()
+      const data: PersistedState = {
+        placedElements,
+        baseId: selectedBase.id,
+        designNotes,
+      }
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+      } catch {
+        // Storage full or blocked — ignore
+      }
+    }
+  )
+
+  // Also persist when designNotes change
+  useLamaalamStore.subscribe(
+    (state) => state.designNotes,
+    (designNotes) => {
+      const { placedElements, selectedBase } = useLamaalamStore.getState()
+      const data: PersistedState = {
+        placedElements,
+        baseId: selectedBase.id,
+        designNotes,
+      }
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+      } catch {
+        // ignore
+      }
+    }
+  )
+}

@@ -36,7 +36,8 @@
       "Bash(powershell.exe -Command \"Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue; Write-Host 'Cleared'\")",
       "Bash(npx tsc:*)",
       "Bash(npm run:*)",
-      "Bash(npx rimraf:*)"
+      "Bash(npx rimraf:*)",
+      "Bash(ls:*)"
     ]
   }
 }
