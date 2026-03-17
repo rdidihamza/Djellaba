@@ -33,7 +33,9 @@
       "Bash(node -e \"require\\(''''./tailwind.config.ts''''\\)\")",
       "Bash(ls /c/Users/hamza/Desktop/Djellaba/tailwind.config*)",
       "Bash(ls /c/Users/hamza/Desktop/Djellaba/postcss.config*)",
-      "Bash(powershell.exe -Command \"Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue; Write-Host 'Cleared'\")"
+      "Bash(powershell.exe -Command \"Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue; Write-Host 'Cleared'\")",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)"
     ]
   }
 }
